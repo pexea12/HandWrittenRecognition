@@ -20,15 +20,20 @@ plt.show()
 
 class NeuralNetwork:
     def __init__(self, nLayers, nInteration = 10, learningRate = 0.1):
+        ### nLayers: số lớp trong mạng neural
+        ### nInteration: số lần huấn luyện trên tập tranning set, offline learning.
         self.nLayers = nLayers
         self.nInteration = nInteration
         self.learningRate = learningRate
 
     def initWeight(self):
+        ### self.w: trọng số, kích thước (28*28 + 1 bias unit, 30) và (30 + 1 bias unit, 10)
         self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
                 np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
 
     def fitData(self, X_train, y_train):
+        ### self.nLayer: số lượng neural ở mỗi layer (28*28, 30, 10)
+        ### self.value: giá trị ở mỗi layer
         self.nLayer = [int(X_train.shape[1]), int(30), 10]
         self.value = [np.zeros(self.nLayer[0]) ,np.zeros(30), np.zeros(10)]
         self.initWeight()
@@ -37,9 +42,13 @@ class NeuralNetwork:
             for nOfSet in range(X_train.shape[0]):
                 self.value[0] = X_train[nOfSet]
                 for i in range(1, self.nLayers):
+                    ### feed forward
                     s = self.netInput(self.value[i-1], self.w[i-1])
                     o = self.sigmoid(s)
                     self.value[i] = o
+
+                ### back propagation
+
 
 
     def feedForward(self, Layer1, Layer2):

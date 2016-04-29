@@ -19,7 +19,7 @@ plt.tight_layout()
 plt.show()
 
 class NeuralNetwork:
-    def __init__(self, nLayers, nInteration = 10, learningRate = 0.1):
+    def __init__(self, nLayers, nInteration = 10, learningRate = 0.1, regularizarion = 0.1):
         ### nLayers: số lớp trong mạng neural
         ### nInteration: số lần huấn luyện trên tập tranning set, offline learning.
         self.nLayers = nLayers
@@ -27,7 +27,7 @@ class NeuralNetwork:
         self.learningRate = learningRate
 
     def initWeight(self):
-        ### self.w: trọng số, kích thước (28*28 + 1 bias unit, 30) và (30 + 1 bias unit, 10)
+        ### self.w: ma trận trọng số, kích thước (28*28 + 1 bias unit, 30) và (30 + 1 bias unit, 10)
         self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
                 np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
 
@@ -38,18 +38,25 @@ class NeuralNetwork:
         self.value = [np.zeros(self.nLayer[0]) ,np.zeros(30), np.zeros(10)]
         self.initWeight()
 
+        cost = 0
+        errorLocal = np.ze
         for _ in range(self.nInteration):
-            for nOfSet in range(X_train.shape[0]):
-                self.value[0] = X_train[nOfSet]
+            for nOfSet in range(X_train.shape[0]):  ### m tranning set
+                self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
                 for i in range(1, self.nLayers):
                     ### feed forward
                     s = self.netInput(self.value[i-1], self.w[i-1])
-                    o = self.sigmoid(s)
-                    self.value[i] = o
+                    self.value[i] = self.sigmoid(s)
 
                 ### back propagation
+                cost += self.costFunction(self.value[2], y_train)
+            cost *= -1/X_train.shape[0]
 
 
+    def costFunction(self, output, target):
+        cost = 0
+        for i in range(len(output)):
+            cost += (target[i] * np.log2(output[i]) + (1 - target[i]) * np.log2(1 - output[i]))
 
     def feedForward(self, Layer1, Layer2):
         a = 1

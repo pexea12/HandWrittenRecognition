@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 data = pd.read_csv("mnist_train_100.csv", header = None)
 y_train = data.iloc[:, 0].values
-
 X_train = data.iloc[:, 1:].values
 
+### vẽ lại
 ig, ax = plt.subplots(nrows=2, ncols=5, sharex=True,
 sharey=True,)
 ax = ax.flatten()
@@ -39,7 +39,8 @@ class NeuralNetwork:
         self.initWeight()
 
         cost = 0
-        errorLocal = np.ze
+        errorLocal = [np.zeros(10), np.zeros(30), np.zeros(28 * 28)]
+
         for _ in range(self.nInteration):
             for nOfSet in range(X_train.shape[0]):  ### m tranning set
                 self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
@@ -48,6 +49,9 @@ class NeuralNetwork:
                     s = self.netInput(self.value[i-1], self.w[i-1])
                     self.value[i] = self.sigmoid(s)
 
+                errorLocal[self.nLayers] = self.value[self.nLayers] - y_train
+                for i in range(self.nLayers - 1, 0, -1):
+                    errorLocal[i] += self.value
                 ### back propagation
                 cost += self.costFunction(self.value[2], y_train)
             cost *= -1/X_train.shape[0]
@@ -72,7 +76,7 @@ class NeuralNetwork:
         return 1.0 / (1.0 + np.exp(_netInput))
 
     def sigmoid_derivative(self, sigVal):
-        sigVal *= -1
+        ### sigVal *= -1
         return sigVal*(1 - sigVal)
 
 """

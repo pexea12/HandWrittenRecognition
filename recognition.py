@@ -26,21 +26,16 @@ class NeuralNetwork:
         self.nInteration = nInteration
         self.learningRate = learningRate
 
-    def initWeight(self):
+    def init(self, X_train, y_train):
+        ### self.nLayer: số lượng neural ở mỗi layer (28*28, 30, 10)
+        ### self.value: giá trị ở mỗi layer
         ### self.w: ma trận trọng số, kích thước (28*28 + 1 bias unit, 30) và (30 + 1 bias unit, 10)
+        self.nLayer = [int(X_train.shape[1]), int(30), 10]
+        self.value = [np.zeros(self.nLayer[0]) ,np.zeros(30), np.zeros(10)]
         self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
                 np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
 
     def fitData(self, X_train, y_train):
-        ### self.nLayer: số lượng neural ở mỗi layer (28*28, 30, 10)
-        ### self.value: giá trị ở mỗi layer
-        self.nLayer = [int(X_train.shape[1]), int(30), 10]
-        self.value = [np.zeros(self.nLayer[0]) ,np.zeros(30), np.zeros(10)]
-        self.initWeight()
-
-        cost = 0
-        errorLocal = [np.zeros(10), np.zeros(30), np.zeros(28 * 28)]
-
         for _ in range(self.nInteration):
             for nOfSet in range(X_train.shape[0]):  ### m tranning set
                 self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
@@ -49,21 +44,23 @@ class NeuralNetwork:
                     s = self.netInput(self.value[i-1], self.w[i-1])
                     self.value[i] = self.sigmoid(s)
 
-                errorLocal[self.nLayers] = self.value[self.nLayers] - y_train
-                for i in range(self.nLayers - 1, 0, -1):
-                    errorLocal[i] += self.value
+    ### back propagation
+    def backPropa(self, X_train, y_train):
+        cost = 0
+        errorLocal = [np.zeros(10), np.zeros(30), np.zeros(28 * 28)]
+
+        errorLocal[self.nLayers] = self.value[self.nLayers] - y_train
+        for i in range(self.nLayers - 1, 0, -1):
+            errorLocal[i] += self.value
                 ### back propagation
-                cost += self.costFunction(self.value[2], y_train)
-            cost *= -1/X_train.shape[0]
+            cost += self.costFunction(self.value[2], y_train)
+        cost *= -1/X_train.shape[0]
 
 
     def costFunction(self, output, target):
         cost = 0
         for i in range(len(output)):
             cost += (target[i] * np.log2(output[i]) + (1 - target[i]) * np.log2(1 - output[i]))
-
-    def feedForward(self, Layer1, Layer2):
-        a = 1
 
     def classification(self, X):
         return 0

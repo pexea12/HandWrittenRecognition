@@ -35,12 +35,20 @@ class NeuralNetwork:
         self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
                 np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
 
+    def getWeight(self, w, jRow):
+        weight = []
+        for i in range(w.shape[0]):
+            weight.append(w[i, jRow])
+        return weight
+
     def feedForward(self, X_train, y_train):
-        for nOfSet in range(X_train.shape[0]):  ### m tranning set
+        for nOfSet in range(X_train.shape[0]):  ### m trainning set
             self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
-            for i in range(1, self.nLayers):
-                s = self.netInput(self.value[i-1], self.w[i-1])
-                self.value[i] = self.sigmoid(s)
+            for i in range(1, self.nLayers):    ### đi từ layer 2 đến layer 3
+                for j in range(self.nLayer[i]):
+                    weight = self.getWeight(self.w[i-1], j) ### ma trận 1 x N
+                    s = self.netInput(self.value[i-1], weight)
+                    self.value[i][j] = self.sigmoid(s)
 
     ### back propagation
     def backPropa(self, X_train, y_train):
@@ -54,6 +62,9 @@ class NeuralNetwork:
             cost += self.costFunction(self.value[2], y_train)
         cost *= -1/X_train.shape[0]
 
+    def train(self, X_train, y_train):
+        self.init(X_train, y_train)
+        self.feedForward(X_train, y_train)
 
     def costFunction(self, output, target):
         cost = 0
@@ -81,4 +92,4 @@ print(X_train.shape[1])
 """
 
 NN = NeuralNetwork(3, 1, 0.1)
-NN.fitData(X_train, y_train)
+NN.train(X_train, y_train)

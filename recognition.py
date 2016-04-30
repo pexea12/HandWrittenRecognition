@@ -35,14 +35,12 @@ class NeuralNetwork:
         self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
                 np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
 
-    def fitData(self, X_train, y_train):
-        for _ in range(self.nInteration):
-            for nOfSet in range(X_train.shape[0]):  ### m tranning set
-                self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
-                for i in range(1, self.nLayers):
-                    ### feed forward
-                    s = self.netInput(self.value[i-1], self.w[i-1])
-                    self.value[i] = self.sigmoid(s)
+    def feedForward(self, X_train, y_train):
+        for nOfSet in range(X_train.shape[0]):  ### m tranning set
+            self.value[0] = X_train[nOfSet]     ### a[1] = x[1]
+            for i in range(1, self.nLayers):
+                s = self.netInput(self.value[i-1], self.w[i-1])
+                self.value[i] = self.sigmoid(s)
 
     ### back propagation
     def backPropa(self, X_train, y_train):

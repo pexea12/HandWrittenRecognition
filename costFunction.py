@@ -58,8 +58,8 @@ def costFunction(X, y, Theta, LAMBDA):
 	# Theta2 (10 x 26), sigma3 (m x 10), z2 (m x 25)
 	sigma2 = sigma3.dot(Theta2[:, 1:]) * sigmoidGradient(z2) # sigma2 (m x 25)
 	
-	Theta2_grad = sigma3.T.dot(a2) # Theta1_grad (25 x 401)
-	Theta1_grad = sigma2.T.dot(newX) # Theta2_grad (10 x 26)
+	Theta2_grad = sigma3.T.dot(a2) # Theta2_grad (10 x 26)
+	Theta1_grad = sigma2.T.dot(newX) # Theta1_grad (25 x 401)
 	
 	# Add regularization (ex4 page 6)
 	J += LAMBDA * (np.sum(Theta1[:, 1:] ** 2) + np.sum(Theta2[:, 2:] ** 2)) / (2 * m)

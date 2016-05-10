@@ -2,101 +2,131 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = pd.read_csv("mnist_train_100.csv", header = None)
-y_train = data.iloc[:, 0].values
-X_train = data.iloc[:, 1:].values
+class NeuralNetwork:
+	def __init__(self, nLayers, nIteration=10, learningRate=0.1, regularizarion=0.1):
+		### nLayers: number of layers
+		### nIteration: number of iterations
+		self.nLayers = nLayers
+		self.nIteration = nIteration
+		self.learningRate = learningRate
+
+	def init(self, X_train, y_train):
+		### self.nLayer: number of neural at each layer (28*28, 30, 10)
+		### self.value: value of neural at each layer
+		### self.w: Theta (30, 28*28 + 1 bias unit) and (10, 30 + 1 bias unit)
+		### X_train: add 1 more bias column
+		### y_train
+		
+		self.nLayer = [int(X_train.shape[1]), 30, 10]
+		
+		self.m = X_train.shape[0]
+		self.X_train = np.append(np.ones((self.m, 1)), X_train, axis=1)
+		self.y_train = y_train
+		self.y_train = self.makeOutput()
+		
+		self.value = [
+			np.zeros((self.m, self.nLayer[0] + 1)),
+			np.zeros((self.m, self.nLayer[1] + 1)),
+			np.zeros((self.m, self.nLayer[2]))
+		]
+			
+		self.errorLocal = [
+			np.zeros((self.m, self.nLayer[1])),
+			np.zeros((self.m, self.nLayer[2]))
+		]
+		
+		self.w = [
+			np.random.uniform(-0.12, 0.12, (self.nLayer[1], self.nLayer[0] + 1)),
+			np.random.uniform(-0.12, 0.12, (self.nLayer[2], self.nLayer[1] + 1))
+		]
+		
+		self.cost = 0
+
+	def makeOutput(self):
+		out = np.zeros((y_train.shape[0], 10))
+		for i in range(y_train.shape[0]):
+			out[i, y_train[i]] = 1
+		return out
+
+	def feedForward(self):
+		self.value[0] = self.X_train
+		self.value[1] = self.sigmoid(self.value[0].dot(self.w[0].T))
+		self.value[1] = np.append(np.ones((self.m, 1)), self.value[1], axis=1)
+		self.value[2] = self.sigmoid(self.value[1].dot(self.w[1].T))
+
+	### back propagation
+	def backPropa(self):
+		self.errorLocal[1] = self.value[2] - self.y_train
+		self.errorLocal[0] = self.errorLocal[1].dot(self.w[1][:, 1:]) * self.sigmoid_derivative(self.value[0].dot(self.w[0].T))
+
+		self.w[1] -= self.learningRate * self.errorLocal[1].T.dot(self.value[1])
+		self.w[0] -= self.learningRate * self.errorLocal[0].T.dot(self.X_train)
+
+
+	def train(self, X_train, y_train):
+		self.init(X_train=X_train, y_train=y_train)
+		
+		for i in range(0, self.nIteration):
+			print(i, ':')
+			self.feedForward()
+			self.backPropa()
+			print('Cost = ', self.costFunction())
+
+
+	def costFunction(self):
+		# not add regularization yet
+		J = np.log(self.value[2]) * self.y_train + np.log(1 - self.value[2]) * (1 - self.y_train)
+		return -np.sum(J) / self.m
+
+	def classification(self, X_test, y_test):
+		m = X_test.shape[0]
+
+		X_test_temp = np.append(np.ones((m, 1)), X_test, axis=1)
+		test_result = self.sigmoid(X_test_temp.dot(self.w[0].T))
+		test_result = np.append(np.ones((m, 1)), result, axis=1)
+		test_result = self.sigmoid(result.dot(self.w[1].T))
+		
+		test_result = np.round(test_result)
+		result = np.zeros((m, 1))
+
+		for i in range(self.m):
+			for j in range(0, 10):
+				if (self.value[2][i, j] == 1):
+					result[i] = j
+		
+		accuracy = np.sum(result == y_test)
+		print('Accuracy = ', accuracy)
+
+
+	def sigmoid(self, z):
+		return 1.0 / (1.0 + np.exp(-z))
+
+	def sigmoid_derivative(self, z):
+		sigVal = self.sigmoid(z)
+		return sigVal * (1 - sigVal)
+
+
+data = pd.read_csv("mnist_train_100.csv", header=None)
+X_train = data.iloc[:, 1:].values # X_train(100 x 784)
+X_train.astype(float)
+y_train = data.iloc[:, 0].values # y_train(100 x 1)
 
 ### vẽ lại
-ig, ax = plt.subplots(nrows=2, ncols=5, sharex=True,
-sharey=True,)
+"""
+ig, ax = plt.subplots(nrows=2, ncols=5, sharex=True, sharey=True)
 ax = ax.flatten()
 for i in range(10):
-    img = X_train[y_train == i][0].reshape(28, 28)
-    ax[i].imshow(img, cmap='Greys', interpolation='nearest')
+	img = X_train[y_train == i][0].reshape(28, 28)
+	ax[i].imshow(img, cmap='Greys', interpolation='nearest')
 ax[0].set_xticks([])
 ax[0].set_yticks([])
 plt.tight_layout()
 plt.show()
-
-class NeuralNetwork:
-    def __init__(self, nLayers, nInteration = 10, learningRate = 0.1, regularizarion = 0.1):
-        ### nLayers: số lớp trong mạng neural
-        ### nInteration: số lần huấn luyện trên tập tranning set, offline learning.
-        self.nLayers = nLayers
-        self.nInteration = nInteration
-        self.learningRate = learningRate
-
-    def init(self, X_train, y_train):
-        ### self.nLayer: số lượng neural ở mỗi layer (28*28, 30, 10)
-        ### self.value: giá trị của neural ở mỗi layer
-        ### self.w: ma trận trọng số, kích thước (28*28 + 1 bias unit, 30) và (30 + 1 bias unit, 10)
-        self.nLayer = [int(X_train.shape[1]), int(30), 10]
-        self.value = [np.zeros(self.nLayer[0]) ,np.zeros(30), np.zeros(10)]
-        self.w = [np.random.uniform(-1.0, 1.0, (self.nLayer[0] + 1, self.nLayer[1])),
-                np.random.uniform(-1.0, 1.0, (self.nLayer[1] + 1, self.nLayer[2]))]
-        self.errorLocal = [np.zeros(10), np.zeros(30), np.zeros(28 * 28)]
-
-    def getWeight(self, w, iRow, jCol):
-        weight = []
-        if (iRow == -1):
-            for i in range(w.shape[0]):
-                weight.append(w[i, jCol])
-        else:
-            for i in range(w.shape[1]):
-                weight.append(w[iRow, i])
-        return weight
-
-    def feedForward(self, X_train, y_train, ithSet):
-        self.value[0] = X_train[ithSet]     ### a[1] = x[1]
-        for i in range(1, self.nLayers):    ### đi từ layer 2 đến layer 3
-            for j in range(self.nLayer[i]): ### tính neural j ở lớp i
-                weight = self.getWeight(self.w[i-1], -1, j)
-                s = self.netInput(self.value[i-1], weight)
-                self.value[i][j] = self.sigmoid(s)
-
-    ### back propagation
-    def backPropa(self, X_train, y_train, ithSet):
-        cost = 0
-        self.errorLocal[self.nLayers] = self.value[self.nLayers] - y_train
-        for i in range(self.nLayers - 1, -1, -1):   ### lớp i
-            for j in range(self.nLayer[i]):         ### neural j
-                weight = self.getWeight(self.w[i], j, -1)
-                s = self.netInput(self.errorLocal[j+1], weight)
-                s *= self.value[i][j] * (1 - self.value[i][j])
-                self.errorLocal[i][j] = s
-            cost += self.costFunction(self.value[2], y_train)
-        cost *= -1/X_train.shape[0]
-
-    def train(self, X_train, y_train):
-        self.init(X_train, y_train)
-        for ithSet in range(X_train.shape[0]):  ### m trainning set
-            self.feedForward(X_train, y_train, ithSet)
-            self.backPropa(X_train, y_train, ithSet)
-
-    def costFunction(self, output, target):
-        cost = 0
-        for i in range(len(output)):
-            cost += (target[i] * np.log2(output[i]) + (1 - target[i]) * np.log2(1 - output[i]))
-
-    def classification(self, X):
-        return 0
-
-    def netInput(self, X, w):
-        return np.dot(X, w[1:]) + w[0]
-
-    def sigmoid(self, _netInput):
-        _netInput *= -1.0
-        return 1.0 / (1.0 + np.exp(_netInput))
-
-    def sigmoid_derivative(self, sigVal):
-        ### sigVal *= -1
-        return sigVal*(1 - sigVal)
-
-"""
-print(X_train.shape)
-print(X_train.shape[0])
-print(X_train.shape[1])
 """
 
-NN = NeuralNetwork(3, 1, 0.1)
+X_train = X_train / 256
+NN = NeuralNetwork(nLayers=3, nIteration=10000, learningRate=0.001)
+
+# print(y_train)
 NN.train(X_train, y_train)
+

@@ -3,12 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class NeuralNetwork:
-	def __init__(self, nLayers, nIteration=10, learningRate=0.1, regularizarion=0.1):
+	def __init__(self, nLayers, nIteration=10, learningRate=0.1, regularization=0.1):
 		### nLayers: number of layers
 		### nIteration: number of iterations
 		self.nLayers = nLayers
 		self.nIteration = nIteration
 		self.learningRate = learningRate
+		self.regularization = regularization
 
 	def init(self, X_train, y_train):
 		### self.nLayer: number of neural at each layer (28*28, 30, 10)
@@ -61,7 +62,10 @@ class NeuralNetwork:
 
 		self.w[1] -= self.learningRate * self.errorLocal[1].T.dot(self.value[1])
 		self.w[0] -= self.learningRate * self.errorLocal[0].T.dot(self.X_train)
-
+		
+		# add regularization
+		self.w[1][:, 1:] -=  self.regularization / self.m * self.w[1][:, 1:]
+		self.w[0][:, 1:] -=  self.regularization / self.m * self.w[0][:, 1:]
 
 	def train(self, X_train, y_train):
 		self.init(X_train=X_train, y_train=y_train)
@@ -76,7 +80,12 @@ class NeuralNetwork:
 	def costFunction(self):
 		# not add regularization yet
 		J = np.log(self.value[2]) * self.y_train + np.log(1 - self.value[2]) * (1 - self.y_train)
-		return -np.sum(J) / self.m
+		J = -np.sum(J) / self.m
+		
+		# add regularization
+		J += self.regularization * (np.sum(self.w[0][:, 1:] ** 2) + np.sum(self.w[1][:, 1:] ** 2)) / (2 * self.m)
+		
+		return J
 
 	def classification(self, X_test, y_test):
 		m = X_test.shape[0]
@@ -125,8 +134,7 @@ plt.show()
 """
 
 X_train = X_train / 256
-NN = NeuralNetwork(nLayers=3, nIteration=10000, learningRate=0.001)
+NN = NeuralNetwork(nLayers=3, nIteration=1000, learningRate=0.01)
 
 # print(y_train)
 NN.train(X_train, y_train)
-

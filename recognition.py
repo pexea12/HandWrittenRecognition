@@ -92,17 +92,16 @@ class NeuralNetwork:
 
 		X_test_temp = np.append(np.ones((m, 1)), X_test, axis=1)
 		test_result = self.sigmoid(X_test_temp.dot(self.w[0].T))
-		test_result = np.append(np.ones((m, 1)), result, axis=1)
-		test_result = self.sigmoid(result.dot(self.w[1].T))
+		test_result = np.append(np.ones((m, 1)), test_result, axis=1)
+		test_result = self.sigmoid(test_result.dot(self.w[1].T))
 		
 		test_result = np.round(test_result)
 		result = np.zeros((m, 1))
 
-		for i in range(self.m):
+		for i in range(m):
 			for j in range(0, 10):
-				if (self.value[2][i, j] == 1):
-					result[i] = j
-		
+				if (test_result[i, j] == 1):
+					result[i] = 
 		accuracy = np.sum(result == y_test)
 		print('Accuracy = ', accuracy)
 
@@ -138,3 +137,11 @@ NN = NeuralNetwork(nLayers=3, nIteration=1000, learningRate=0.01)
 
 # print(y_train)
 NN.train(X_train, y_train)
+
+data_test = pd.read_csv("mnist_test_10.csv", header=None)
+X_test = data.iloc[:, 1:].values # X_train(10 x 784)
+X_test.astype(float)
+y_test = data.iloc[:, 0].values # y_train(10x 1)
+y_test = np.array([y_test]).T
+
+NN.classification(X_test, y_test)
